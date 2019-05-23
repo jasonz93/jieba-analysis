@@ -1,5 +1,6 @@
 package com.huaban.analysis.jieba;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,29 @@ import com.huaban.analysis.jieba.viterbi.FinalSeg;
 
 
 public class JiebaSegmenter {
-    private static WordDictionary wordDict = WordDictionary.getInstance();
-    private static FinalSeg finalSeg = FinalSeg.getInstance();
+    private WordDictionary dictionary;
+    private FinalSeg finalSeg;
 
     public static enum SegMode {
         INDEX,
         SEARCH
+    }
+
+    public JiebaSegmenter() {
+        this(WordDictionary.getDefaultInstance(), FinalSeg.getDefaultInstance());
+    }
+
+    public JiebaSegmenter(WordDictionary dictionary) {
+        this(dictionary, FinalSeg.getDefaultInstance());
+    }
+
+    public JiebaSegmenter(WordDictionary dictionary, FinalSeg finalSeg) {
+        this.dictionary = dictionary;
+        this.finalSeg = finalSeg;
+    }
+
+    public WordDictionary getDictionary() {
+        return dictionary;
     }
 
     /**
@@ -23,17 +41,17 @@ public class JiebaSegmenter {
      * @param path user dict dir
      */
     public void initUserDict(Path path){
-        wordDict.init(path);
+        dictionary.init(path);
     }
 
     public void initUserDict(String[] paths){
-        wordDict.init(paths);
+        dictionary.init(paths);
 
     }
     
     private Map<Integer, List<Integer>> createDAG(String sentence) {
         Map<Integer, List<Integer>> dag = new HashMap<Integer, List<Integer>>();
-        DictSegment trie = wordDict.getTrie();
+        DictSegment trie = dictionary.getTrie();
         char[] chars = sentence.toCharArray();
         int N = chars.length;
         int i = 0, j = 0;
@@ -78,7 +96,7 @@ public class JiebaSegmenter {
         for (int i = N - 1; i > -1; i--) {
             Pair<Integer> candidate = null;
             for (Integer x : dag.get(i)) {
-                double freq = wordDict.getFreq(sentence.substring(i, x + 1)) + route.get(x + 1).freq;
+                double freq = dictionary.getFreq(sentence.substring(i, x + 1)) + route.get(x + 1).freq;
                 if (null == candidate) {
                     candidate = new Pair<Integer>(x, freq);
                 }
@@ -116,7 +134,7 @@ public class JiebaSegmenter {
                                 int j = 0;
                                 for (; j < token.length() - 1; ++j) {
                                     gram2 = token.substring(j, j + 2);
-                                    if (wordDict.containsWord(gram2))
+                                    if (dictionary.containsWord(gram2))
                                         tokens.add(new SegToken(gram2, offset + j, offset + j + 2));
                                 }
                             }
@@ -125,7 +143,7 @@ public class JiebaSegmenter {
                                 int j = 0;
                                 for (; j < token.length() - 2; ++j) {
                                     gram3 = token.substring(j, j + 3);
-                                    if (wordDict.containsWord(gram3))
+                                    if (dictionary.containsWord(gram3))
                                         tokens.add(new SegToken(gram3, offset + j, offset + j + 3));
                                 }
                             }
@@ -135,7 +153,7 @@ public class JiebaSegmenter {
                     sb = new StringBuilder();
                     offset = i;
                 }
-                if (wordDict.containsWord(paragraph.substring(i, i + 1)))
+                if (dictionary.containsWord(paragraph.substring(i, i + 1)))
                     tokens.add(new SegToken(paragraph.substring(i, i + 1), offset, ++offset));
                 else
                     tokens.add(new SegToken(paragraph.substring(i, i + 1), offset, ++offset));
@@ -154,7 +172,7 @@ public class JiebaSegmenter {
                         int j = 0;
                         for (; j < token.length() - 1; ++j) {
                             gram2 = token.substring(j, j + 2);
-                            if (wordDict.containsWord(gram2))
+                            if (dictionary.containsWord(gram2))
                                 tokens.add(new SegToken(gram2, offset + j, offset + j + 2));
                         }
                     }
@@ -163,7 +181,7 @@ public class JiebaSegmenter {
                         int j = 0;
                         for (; j < token.length() - 2; ++j) {
                             gram3 = token.substring(j, j + 3);
-                            if (wordDict.containsWord(gram3))
+                            if (dictionary.containsWord(gram3))
                                 tokens.add(new SegToken(gram3, offset + j, offset + j + 3));
                         }
                     }
@@ -201,7 +219,7 @@ public class JiebaSegmenter {
                         tokens.add(buf);
                     }
                     else {
-                        if (wordDict.containsWord(buf)) {
+                        if (dictionary.containsWord(buf)) {
                             tokens.add(buf);
                         }
                         else {
@@ -219,7 +237,7 @@ public class JiebaSegmenter {
                 tokens.add(buf);
             }
             else {
-                if (wordDict.containsWord(buf)) {
+                if (dictionary.containsWord(buf)) {
                     tokens.add(buf);
                 }
                 else {

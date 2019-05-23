@@ -19,7 +19,7 @@ import com.huaban.analysis.jieba.Node;
 
 
 public class FinalSeg {
-    private static FinalSeg singleInstance;
+    private static FinalSeg defaultInstance;
     private static final String PROB_EMIT = "/prob_emit.txt";
     private static char[] states = new char[] { 'B', 'M', 'E', 'S' };
     private static Map<Character, Map<Character, Double>> emit;
@@ -29,20 +29,28 @@ public class FinalSeg {
     private static Double MIN_FLOAT = -3.14e100;;
 
 
-    private FinalSeg() {
+    public FinalSeg() {
+        InputStream is = this.getClass().getResourceAsStream(PROB_EMIT);
+        loadModel(is);
     }
 
+    public FinalSeg(InputStream modelInputStream) {
+        loadModel(modelInputStream);
+    }
 
-    public synchronized static FinalSeg getInstance() {
-        if (null == singleInstance) {
-            singleInstance = new FinalSeg();
-            singleInstance.loadModel();
+    @Deprecated
+    public static FinalSeg getInstance() {
+        return getDefaultInstance();
+    }
+
+    public synchronized static FinalSeg getDefaultInstance() {
+        if (null == defaultInstance) {
+            defaultInstance = new FinalSeg();
         }
-        return singleInstance;
+        return defaultInstance;
     }
 
-
-    private void loadModel() {
+    private void loadModel(InputStream is) {
         long s = System.currentTimeMillis();
         prevStatus = new HashMap<Character, char[]>();
         prevStatus.put('B', new char[] { 'E', 'S' });
@@ -74,7 +82,6 @@ public class FinalSeg {
         transS.put('S', -0.6658631448798212);
         trans.put('S', transS);
 
-        InputStream is = this.getClass().getResourceAsStream(PROB_EMIT);
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             emit = new HashMap<Character, Map<Character, Double>>();
