@@ -198,5 +198,10 @@
             <name>Nexus Staging Repository</name>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
+        <snapshotRepository>
+            <id>starrank-snapshots</id>
+            <name>StarRank Snapshots Repository</name>
+            <url>http://nexus.corp.starrank.com/repository/maven-snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
